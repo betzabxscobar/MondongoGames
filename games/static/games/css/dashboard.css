@@ -270,7 +270,7 @@ body::before{
 /* Cards grid */
 .cards{
     display: grid;
-    grid-template-columns: repeat(2, minmax(260px, 1fr)); /* 👈 2 columnas siempre */
+    grid-template-columns: repeat(3, minmax(260px, 1fr)); /* 👈 2 columnas siempre */
     gap: clamp(16px, 2vw, 28px);
     justify-items: center;
     width: 100%;
