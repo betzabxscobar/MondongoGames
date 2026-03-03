@@ -1,0 +1,166 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mondongo Games | Registro</title>
+    <link rel="stylesheet" href="{% static 'games/css/register.css' %}?v=20260226-1">
+</head>
+<body>
+<div class="volume-control">
+    <div class="slider">
+        <span class="volume">🔊</span>
+        <input 
+            type="range" 
+            min="0" 
+            max="1" 
+            step="0.01" 
+            value="0.12"
+            class="level"
+            id="volumeSlider">
+    </div>
+</div>
+<div class="hero">
+    <div class="hero-content">
+        <div class="titulo-banner">
+            <h1 class="titulo-principal">Mondongo.Games</h1>
+            <p class="subtitulo">¡Tu Arcade Virtual Definitivo!</p>
+            <p class="frase">Juega. Compite. Domina.</p>
+        </div>
+
+        <div class="auth-box">
+
+            <!-- PANEL IZQUIERDO -->
+            <div class="left-panel">
+                <h2>¡Acepta el Desafío!</h2>
+                <p>¿Ya eres Mondongo?</p>
+                <a href="{% url 'login' %}" class="ghost-btn">Iniciar Sesión</a>
+            </div>
+
+            <!-- PANEL DERECHO -->
+            <div class="right-panel">
+                <h2>REGISTRO</h2>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="input-group">
+                        <label for="username">Usuario</label>
+                        <input type="text" name="username" placeholder="Ingresa tu nombre de usuario" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="username">Correo electrónico</label>
+                        <input type="email" name="email" placeholder="Ingresa tu correo electrónico" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="username">Contraseña</label>
+                        <input type="password" name="password1" id="passwordInput" placeholder="Ingresa tu contraseña" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="username">Confirmar contraseña</label>
+                        <input type="password" name="password2" placeholder="Confirma nuevamente tu contraseña" required>
+                    </div>
+
+                    <button type="submit" class="primary-btn">
+                        Registrarse
+                    </button>
+
+                    {% if messages %}
+                        <div class="error-box">
+                            {% for message in messages %}
+                                <p>{{ message }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+<footer class="site-footer">
+<p>© 2026 MondongoGames. Todos los derechos reservados.</p>
+</footer>
+<audio id="registerMusic" loop>
+    <source src="{% static 'games/sounds/register_bg.mp3' %}" type="audio/mpeg">
+</audio>
+
+<audio id="hoverSound">
+    <source src="{% static 'games/sounds/mouse_pass.mp3' %}" type="audio/mpeg">
+</audio>
+<script>
+    const registerMusic = document.getElementById("registerMusic");
+    const volumeSlider = document.getElementById("volumeSlider");
+    const hoverSound = document.getElementById("hoverSound");
+
+    /* volumen inicial */
+    registerMusic.volume = parseFloat(volumeSlider.value);
+
+    /* autoplay seguro */
+    document.addEventListener("click", () => {
+        if (registerMusic.paused) {
+            registerMusic.play().catch(()=>{});
+        }
+    }, { once: true });
+
+    /* cambiar volumen */
+    volumeSlider.addEventListener("input", function(){
+        registerMusic.volume = parseFloat(this.value);
+    });
+
+    /* hover sound */
+    hoverSound.volume = 0.75;
+
+    const hoverTargets = document.querySelectorAll("input, button, a");
+
+    hoverTargets.forEach(el => {
+        el.addEventListener("mouseenter", () => {
+            hoverSound.currentTime = 0;
+            hoverSound.play().catch(()=>{});
+        });
+    });
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+    
+        const passwordInput = document.getElementById("passwordInput");
+        if (!passwordInput) return; // seguridad
+    
+        const tooltip = document.createElement("div");
+        tooltip.className = "password-tooltip";
+        passwordInput.parentElement.appendChild(tooltip);
+    
+        function validatePassword(value){
+            if(value.length < 8) return "Mínimo 8 caracteres";
+            if(!/[A-Z]/.test(value)) return "Debe tener una mayúscula";
+            if(!/[0-9]/.test(value)) return "Debe tener un número";
+            if(!/[^A-Za-z0-9]/.test(value)) return "Debe tener un carácter especial";
+            return "Contraseña segura";
+        }
+    
+        passwordInput.addEventListener("focus", () => {
+            tooltip.style.display = "block";
+            tooltip.textContent = "Empieza a escribir tu contraseña";
+            tooltip.classList.remove("valid");
+        });
+    
+        passwordInput.addEventListener("input", () => {
+            const result = validatePassword(passwordInput.value);
+            tooltip.textContent = result;
+            tooltip.style.display = "block";
+            tooltip.classList.toggle("valid", result === "Contraseña segura");
+        });
+    
+        passwordInput.addEventListener("blur", () => {
+            tooltip.style.display = "none";
+        });
+    
+    });
+    </script>
+</body>
+</html>

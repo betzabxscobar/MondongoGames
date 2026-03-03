@@ -1,0 +1,347 @@
+﻿{% extends "games/base.html" %}
+{% load static %}
+
+{% block content %}
+
+<canvas id="bgCanvas"></canvas>
+
+<div class="dashboard-wrapper">
+
+    <aside class="sidebar">
+        <div class="leftBar">
+            <div class="profileBox">
+                <h2 class="brandTitle">Mondonguito</h2>
+
+                <div class="avatar">
+                    {% if request.user.profile.avatar %}
+                        <img src="{{ request.user.profile.avatar.url }}" class="avatar-img">
+                    {% else %}
+                        <span class="avatar-letter">
+                            {{ request.user.username|first|upper }}
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="rightbar-content">
+
+            <h3 class="right-title">FILTRAR POR CATEGORIA</h3>
+
+            <a href="?categoria=Accion"
+            class="categoria-btn {% if request.GET.categoria == 'Accion' %}activo{% endif %}">
+            Accion
+            </a>
+
+            <a href="?categoria=Aventura"
+            class="categoria-btn {% if request.GET.categoria == 'Aventura' %}activo{% endif %}">
+            Aventura
+            </a>
+
+            
+            <a href="?categoria=Arcade"
+            class="categoria-btn {% if request.GET.categoria == 'Arcade' %}activo{% endif %}">
+            Arcade
+            </a>
+
+            <a href="{% url 'dashboard' %}"
+            class="categoria-btn reset">
+            Ver todas
+            </a>
+        </div>
+    </div>
+</aside>
+
+    <main class="main">
+
+        <div class="topbar">
+            <h1>Hola, {{ request.user.username|lower|capfirst }}</h1>
+
+            <!-- BUSCADOR CYBERPUNK -->
+            <div id="poda">
+                <div class="glow"></div>
+                <div class="darkBorderBg"></div>
+                <div class="white"></div>
+                <div class="border"></div>
+
+                <div id="main">
+                    <form method="GET" style="width:100%; height:100%;">
+                        <input 
+                            name="q"
+                            placeholder="Buscar juegos..." 
+                            type="text" 
+                            class="input"
+                            value="{{ request.GET.q }}"
+                        />
+                    </form>
+
+                    <div id="filter-icon">
+                        <svg height="27" width="27" viewBox="4.8 4.56 14.832 15.408" fill="none">
+                            <path d="M8.16 6.65H15.83C16.47 6.65 16.99 7.17 16.99 7.81V9.09C16.99 9.56 16.7 10.14 16.41 10.43L13.91 12.64C13.56 12.93 13.33 13.51 13.33 13.98V16.48C13.33 16.83 13.1 17.29 12.81 17.47L12 17.98C11.24 18.45 10.2 17.92 10.2 16.99V13.91C10.2 13.5 9.97 12.98 9.73 12.69L7.52 10.36C7.23 10.08 7 9.55 7 9.2V7.87C7 7.17 7.52 6.65 8.16 6.65Z"
+                            stroke="#d6d6e6" stroke-width="1"/>
+                        </svg>
+                    </div>
+
+                    <div id="search-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none">
+                            <circle cx="11" cy="11" r="8" stroke="#fff"/>
+                            <line x1="16.65" y1="16.65" x2="22" y2="22" stroke="#fff"/>
+                        </svg>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- TARJETAS -->
+        <div class="cards">
+            {% for juego in juegos %}
+                <div class="card" data-click-sfx data-url="{% url 'juego' juego.nombre %}" data-img="{%static juego.imagen %}">
+
+                    <div class="imgBox">
+                        <img src="{% static juego.imagen %}" alt="">
+                    </div>
+
+                    <div class="textBox">
+                        <h3 class="head">{{ juego.nombre }}</h3>
+                        <span>{{ juego.categoria }}</span>
+                    </div>
+                </div>
+            {% empty %}
+                <p>No se encontraron juegos.</p>
+            {% endfor %}
+        </div>
+
+    </main>
+    <aside class="rightbar">
+        <h3 class="right-title">JUGADOS RECIENTEMENTE</h3>
+        <div id="recentGames" class="recent-list"></div>
+    </aside>
+    <a href="{% url 'soporte' %}" class="btn-glitch-fill support-btn">
+        <span class="text">// Soporte</span>
+        <span class="text-decoration"> _</span>
+        <span class="decoration">=&gt;</span>
+    </a>
+</div>
+
+<audio id="bgMusic" loop>
+    <source src="{% static 'games/sounds/bg-music.mp3' %}" type="audio/mpeg">
+</audio>
+<audio id="clickSfx" preload="auto">
+    <source src="{% static 'games/sounds/dashboard_sonido.mp3' %}" type="audio/mpeg">
+</audio>
+<audio id="uiHoverSfx" preload="auto">
+    <source src="{% static 'games/sounds/dashboard_sonido.mp3' %}" type="audio/mpeg">
+</audio>
+<script>
+const canvas = document.getElementById("bgCanvas");
+const ctx = canvas.getContext("2d");
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener("resize", resizeCanvas);
+
+let mouse = { x: null, y: null };
+
+window.addEventListener("mousemove", (e) => {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+});
+
+let particles = [];
+
+function randomColor() {
+    const colors = [
+        [255, 0, 200],
+        [0, 255, 255],
+        [180, 0, 255],
+        [255, 100, 200],
+        [0, 180, 255]
+    ];
+    return colors[Math.floor(Math.random() * colors.length)];
+}
+
+for (let i = 0; i < 18; i++) {
+    particles.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: Math.random() * 180 + 120,
+        dx: (Math.random() - 0.5) * 0.2,
+        dy: (Math.random() - 0.5) * 0.2,
+        baseColor: randomColor(),
+        colorShift: Math.random() * 100
+    });
+}
+
+function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    particles.forEach(p => {
+
+        // Movimiento base
+        p.x += p.dx;
+        p.y += p.dy;
+
+        // InteracciÃ³n con mouse
+        if (mouse.x && mouse.y) {
+            let dx = mouse.x - p.x;
+            let dy = mouse.y - p.y;
+            let distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < 300) {
+                p.x -= dx * 0.002;
+                p.y -= dy * 0.002;
+            }
+        }
+
+        // Reposicionar si sale
+        if (p.x < -300) p.x = canvas.width + 300;
+        if (p.x > canvas.width + 300) p.x = -300;
+        if (p.y < -300) p.y = canvas.height + 300;
+        if (p.y > canvas.height + 300) p.y = -300;
+
+        // Cambio suave de color
+        let r = p.baseColor[0] + Math.sin(Date.now() * 0.001 + p.colorShift) * 30;
+        let g = p.baseColor[1] + Math.sin(Date.now() * 0.001 + p.colorShift) * 30;
+        let b = p.baseColor[2] + Math.sin(Date.now() * 0.001 + p.colorShift) * 30;
+
+        const gradient = ctx.createRadialGradient(
+            p.x, p.y, 0,
+            p.x, p.y, p.radius
+        );
+
+        gradient.addColorStop(0, `rgba(${r},${g},${b},0.35)`);
+        gradient.addColorStop(1, "transparent");
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
+    requestAnimationFrame(animate);
+}
+
+animate();
+</script>
+<script>
+    const bgMusic = document.getElementById("bgMusic");
+    bgMusic.volume = 0.12;
+
+    document.addEventListener("click", () => {
+        if (bgMusic.paused) {
+            bgMusic.play();
+        }
+    }, { once: true });
+</script>
+<script>
+document.querySelectorAll(".card").forEach(card => {
+    card.addEventListener("click", function() {
+
+        let nombre = this.querySelector(".head").innerText;
+        let nombreLower = nombre.toLowerCase();
+        let url = this.dataset.url;
+        let img = this.dataset.img;
+
+        // ===== FILTRAR PANEL IZQUIERDO =====
+        document.querySelectorAll(".filtracion-item").forEach(item => {
+            item.style.display = (item.dataset.juego === nombreLower) ? "block" : "none";
+        });
+
+        // ===== GUARDAR RECIENTES =====
+        let recientes = JSON.parse(localStorage.getItem("recientes")) || [];
+        recientes = recientes.filter(j => j.nombre !== nombre);
+        recientes.unshift({nombre, url, img});
+        if (recientes.length > 2) recientes.pop();
+        localStorage.setItem("recientes", JSON.stringify(recientes));
+
+        // ===== REDIRIGIR =====
+        setTimeout(() => {
+            window.location.href = url;
+        }, 300);
+    });
+});
+</script>
+<script>
+let recientes = JSON.parse(localStorage.getItem("recientes")) || [];
+let panel = document.getElementById("recentGames");
+panel.innerHTML = "";
+
+recientes.forEach(j => {
+    panel.innerHTML += `
+        <div class="recent-card" data-click-sfx onclick="location.href='${j.url}'">
+            <img src="${j.img}">
+            <span>${j.nombre}</span>
+        </div>
+    `;
+});
+</script>
+<script>
+function toggleSupport() {
+    const panel = document.getElementById("supportPanel");
+    panel.classList.toggle("active");
+}
+</script>
+<script>
+(function () {
+    const hoverSfx = document.getElementById("uiHoverSfx");
+    if (!hoverSfx) return;
+
+    hoverSfx.volume = 0.25;
+
+    // anti metralleta
+    let lastPlay = 0;
+    const COOLDOWN = 90;
+
+    // desbloqueo por políticas del navegador
+    let unlocked = false;
+    const unlock = () => { unlocked = true; };
+    document.addEventListener("click", unlock, { once: true });
+    document.addEventListener("keydown", unlock, { once: true });
+
+    function playHover() {
+        if (!unlocked) return;
+
+        const now = Date.now();
+        if (now - lastPlay < COOLDOWN) return;
+        lastPlay = now;
+
+        try {
+        hoverSfx.currentTime = 0;
+        hoverSfx.play();
+        } catch (e) {}
+    }
+
+    function shouldIgnore(target) {
+        // No tocar tarjetas (ellas ya suenan)
+        if (target.closest(".card")) return true;
+
+        // No sonar en buscador
+        if (target.closest("input, textarea, select, #poda, #main")) return true;
+
+        return false;
+    }
+
+    function getHoverTarget(target) {
+        return target.closest("a, button, .categoria-btn, .support-btn, .recent-card, [role='button']");
+    }
+
+    document.addEventListener("mouseover", (e) => {
+        const t = e.target;
+        if (!t) return;
+
+        const el = getHoverTarget(t);
+        if (!el) return;
+        if (shouldIgnore(el)) return;
+
+        // evita sonar al moverte dentro del mismo botón
+        if (el.contains(e.relatedTarget)) return;
+
+        playHover();
+    }, true);
+})();
+</script>
+{% endblock %}
+
+

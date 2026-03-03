@@ -1,0 +1,97 @@
+/* ===== RESET LOCAL SOLO PARA ESTA PAGINA ===== */
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Orbitron', sans-serif;
+}
+
+/* ===== GAME PAGE ===== */
+.game-page {
+    min-height: 100vh;
+    padding-top: 70px; /* espacio del navbar */
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    background: linear-gradient(
+        180deg,
+        #1a0033 0%,
+        #6a00ff 50%,
+        #a855f7 100%
+    );
+}
+
+/* ===== TITLE ===== */
+.game-header {
+    margin-top: 40px;
+}
+
+.game-title {
+    font-size: 3.5rem;
+    letter-spacing: 6px;
+    color: white;
+
+    text-shadow:
+        0 0 10px #a855f7,
+        0 0 30px #d28cff,
+        0 0 60px #7a00ff;
+}
+
+/* ===== CENTER GAME ===== */
+.game-container {
+    flex: 1;
+    width: 100%;
+    padding: 20px 0 60px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* ===== GAME SCREEN ===== */
+.game-screen {
+    width: min(1120px, 95%);
+    min-height: 0;
+    padding: 30px;
+
+    background: linear-gradient(
+        180deg,
+        rgba(15, 0, 30, 0.95),
+        rgba(5, 0, 15, 0.98)
+    );
+
+    border-radius: 20px;
+    border: 1px solid rgba(210, 140, 255, 0.35);
+
+    box-shadow:
+        0 0 25px rgba(122, 0, 255, 0.5),
+        inset 0 0 25px rgba(168, 85, 247, 0.25);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+
+    font-size: 22px;
+    color: #d28cff;
+
+    margin: 0 auto;
+}
+
+#spaceInvadersCanvas {
+    display: block;
+    width: min(100%, 1010px);
+    max-width: 1010px;
+    height: auto;
+    margin: 0 auto;
+}
+
+#wallBloodCanvas {
+    display: block;
+    width: min(100%, 1010px);
+    max-width: 1010px;
+    height: auto;
+    margin: 0 auto;
+}

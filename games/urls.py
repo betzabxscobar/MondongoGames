@@ -1,0 +1,33 @@
+from django.urls import path
+from . import views
+from django.contrib.auth import views as auth_views
+
+urlpatterns = [
+    path("login/", views.login_view, name="login"),
+    path("register/", views.register_view, name="register"),
+    path("logout/", views.logout_view, name="logout"),
+    path("", views.home_redirect, name="home"),
+    path("juego/<str:nombre>/", views.juego, name="juego"),
+    path("catalogo/", views.catalogo, name="catalogo"),
+    path("mis-juegos/", views.mis_juegos, name="mis_juegos"),
+    path("editar-perfil/", views.edit_profile, name="edit_profile"),
+    path("soporte/", views.soporte, name="soporte"),
+    path("soporte/admin/", views.soporte_admin, name="soporte_admin"),
+    path("soporte/dev/", views.soporte_dev, name="soporte_dev"),
+    path("partida/registrar/", views.registrar_partida, name="registrar_partida"),
+    path("dashboard/admin/", views.dashboard_admin, name="dashboard_admin"),
+    path("dashboard/dev/", views.dashboard_dev, name="dashboard_dev"),
+    path("dashboard/dev/soporte/", views.soporte_dev, name="soporte_dev"),
+    path("dashboard/user/", views.dashboard_user, name="dashboard_user"),
+    path("dashboard/", views.dashboard_router, name="dashboard"),
+    # ===== APIs (Amigos + Mensajes) =====
+    path("api/friends/", views.api_friends_list),
+    path("api/friends/requests/", views.api_friend_requests),
+    path("api/friends/request/send/", views.api_friend_request_send),
+    path("api/friends/request/<int:request_id>/accept/", views.api_friend_request_accept),
+    path("api/friends/request/<int:request_id>/decline/", views.api_friend_request_decline),
+    path("api/messages/threads/", views.api_message_threads),
+    path("api/messages/thread/<int:user_id>/", views.api_message_thread_detail),
+    path("api/messages/thread/<int:user_id>/send/", views.api_message_send),
+    path("api/messages/unread-count/", views.api_messages_unread_count),
+    ]   

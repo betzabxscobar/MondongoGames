@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MondongoGames</title>
+
+    <link rel="stylesheet" href="{% static 'games/css/messenger_panels.css' %}">
+    <link rel="stylesheet" href="{% static 'games/css/dashboard.css' %}?v=20260226-1">
+    <link rel="stylesheet" href="{% static 'games/css/profile_menu.css' %}?v=20260226-1">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Press+Start+2P&display=swap" rel="stylesheet">
+    {% block extra_css %}{% endblock %}
+    
+</head>
+<body class="{% block body_class %}{% endblock %}">
+
+<!-- ===== NAVBAR GLOBAL ===== -->
+<nav class="navbar">
+    <div class="nav-left">
+        <div class="logo neon-title">MondongoGames</div>
+    </div>
+
+    <div class="nav-right">
+
+        <!-- ===== ICONOS (antes del perfil) ===== -->
+        <div class="nav-icons" aria-label="Accesos rápidos">
+            <button class="nav-icon-btn" type="button" title="Buscar" aria-label="Buscar">
+                <!-- puedes cambiar el icono luego -->
+                <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7" fill="none" stroke="white" stroke-width="2"></circle>
+                    <line x1="16.65" y1="16.65" x2="22" y2="22" stroke="white" stroke-width="2"></line>
+                </svg>
+            </button>
+    
+            <span class="nav-vline" aria-hidden="true"></span>
+    
+            <button class="nav-icon-btn" type="button" title="Notificaciones" aria-label="Notificaciones">
+                <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="white" d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5-6.71V3a2 2 0 1 0-4 0v1.29A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z"/>
+                </svg>
+            </button>
+            <!-- ESTE abre el panel -->
+            <button class="nav-icon-btn" id="btnOpenContacts" type="button" title="Mensajes" aria-label="Mensajes">
+                <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="white" d="M21 6.5A3.5 3.5 0 0 0 17.5 3h-11A3.5 3.5 0 0 0 3 6.5v7A3.5 3.5 0 0 0 6.5 17H7v3l4-3h6.5A3.5 3.5 0 0 0 21 13.5v-7Z"/>
+                </svg>
+                <span class="mg-unread-badge" id="mgUnreadBadge" hidden>0</span>
+            </button>
+    
+            <!-- En vez de correo: Amigos -->
+            <button class="nav-icon-btn" id="btnFriends" type="button" title="Amigos" aria-label="Amigos">
+                <svg class="nav-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="white" d="M16 11c1.66 0 3-1.57 3-3.5S17.66 4 16 4s-3 1.57-3 3.5S14.34 11 16 11Zm-8 0c1.66 0 3-1.57 3-3.5S9.66 4 8 4 5 5.57 5 7.5 6.34 11 8 11Zm0 2c-2.67 0-8 1.34-8 4v3h10v-3c0-1.32.67-2.5 1.72-3.33C10.96 13.24 9.25 13 8 13Zm8 0c-1.67 0-5 1-5 3v3h14v-3c0-2.21-5.33-3-9-3Z"/>
+                </svg>
+            </button>
+
+    
+            <span class="nav-vline" aria-hidden="true"></span>
+        </div>
+    
+        <!-- ===== TU PERFIL (se queda igual) ===== -->
+        <label class="popup" id="profileMenu">
+            <input type="checkbox" id="profileMenuToggle" />
+    
+            <div tabindex="0" class="burger avatar">
+                {% if request.user.profile.avatar %}
+                    <img src="{{ request.user.profile.avatar.url }}" class="avatar-img">
+                {% else %}
+                    {{ request.user.username|first|upper }}
+                {% endif %}
+            </div>
+    
+            <nav class="popup-window">
+                <legend>{{ request.user.username }}</legend>
+                <ul>
+                    <li>
+                        <a href="{% url 'edit_profile' %}" 
+                        class="menu-link" 
+                        id="editarPerfilBtn">
+                        Editar Perfil
+                        </a>
+                    </li>
+                    <li>
+                        <form id="logoutForm" action="{% url 'logout' %}" method="post">
+                            {% csrf_token %}
+                            <button type="button" id="cerrarSesionBtn">Cerrar Sesión</button>
+                        </form>
+                    </li>
+                </ul>
+            </nav>
+        </label>
+    </div>
+</nav>
+<!-- ===== FIN NAVBAR ===== -->
+
+{% block content %}
+{% endblock %}
+
+
+<footer class="site-footer">
+    © 2026 MondongoGames. Todos los derechos reservados.
+</footer>
+
+
+<audio id="clickEditarPerfil">
+    <source src="{% static 'games/sounds/click_editar_perfil.mp3' %}" type="audio/mpeg">
+</audio>
+
+<audio id="clickCerrarSesion">
+    <source src="{% static 'games/sounds/click_cerrar_sesion.mp3' %}" type="audio/mpeg">
+</audio>
+
+<audio id="hoverCardSound" preload="auto">
+    <source src="{% static 'games/sounds/hover_card.mp3' %}" type="audio/mpeg">
+</audio>
+<script>
+    /* ===== CERRAR DROPDOWN PERFIL AL CLIC AFUERA ===== */
+    const profileToggle = document.getElementById("profileMenuToggle");
+    const profileMenu = document.getElementById("profileMenu");
+    
+    document.addEventListener("click", (e) => {
+        if (!profileMenu || !profileToggle) return;
+        if (!profileMenu.contains(e.target)) profileToggle.checked = false;
+    });
+    </script>
+<script>
+
+/* ===== EDITAR PERFIL ===== */
+const clickEditarPerfil = document.getElementById("clickEditarPerfil");
+clickEditarPerfil.volume = 0.4;
+
+const editarPerfilBtn = document.getElementById("editarPerfilBtn");
+
+if (editarPerfilBtn) {
+    editarPerfilBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+
+        clickEditarPerfil.currentTime = 0;
+        clickEditarPerfil.play();
+
+        setTimeout(() => {
+            window.location.href = editarPerfilBtn.href;
+        }, 250);
+    });
+}
+
+// ===== CERRAR SESIÓN =====
+const clickCerrarSesion = document.getElementById("clickCerrarSesion");
+clickCerrarSesion.volume = 0.4;
+
+const cerrarSesionBtn = document.getElementById("cerrarSesionBtn");
+const logoutForm = document.getElementById("logoutForm");
+
+if (cerrarSesionBtn && logoutForm) {
+    cerrarSesionBtn.addEventListener("click", () => {
+        clickCerrarSesion.currentTime = 0;
+        clickCerrarSesion.play();
+        setTimeout(() => {
+            logoutForm.submit();
+        }, 250);
+    });
+}
+
+const hoverSound = document.getElementById("hoverCardSound");
+hoverSound.volume = 0.25;
+
+let lastHoverTime = 0;
+const HOVER_DELAY = 120; // ms (evita spam)
+
+document.querySelectorAll(".card").forEach(card => {
+    card.addEventListener("mouseenter", () => {
+        const now = Date.now();
+
+        if (now - lastHoverTime > HOVER_DELAY) {
+            hoverSound.currentTime = 0;
+            hoverSound.play();
+            lastHoverTime = now;
+        }
+    });
+});
+</script>
+<!-- ===== PANEL MENSAJES (tipo Messenger) ===== -->
+<aside class="mg-panel" id="messagesPanel" aria-hidden="true">
+  <header class="mg-panel__head">
+    <div class="mg-panel__title">Chats</div>
+    <button class="mg-panel__close" id="btnCloseMessages" type="button">✕</button>
+  </header>
+
+  <div class="mg-panel__search">
+    <input id="mgSearchThreads" type="text" placeholder="Buscar en chats..." autocomplete="off">
+  </div>
+
+  <div class="mg-split">
+    <section class="mg-left">
+      <div class="mg-left__tabs">
+        <button type="button" class="mg-tab is-active" data-tab="threads">Mensajes</button>
+        <button type="button" class="mg-tab" data-tab="friends" id="btnOpenFriendsFromMessages">Amigos</button>
+      </div>
+
+      <div class="mg-list" id="mgThreadsList">
+        <div class="mg-empty">Cargando...</div>
+      </div>
+    </section>
+
+    <section class="mg-right" id="mgChatArea">
+      <div class="mg-chat-empty" id="mgChatEmpty">
+        <h3>Selecciona un chat</h3>
+        <p>Elige un amigo para ver la conversación.</p>
+      </div>
+
+      <div class="mg-chat" id="mgChat" hidden>
+        <div class="mg-chat__head">
+          <div class="mg-chat__user" id="mgChatUser">
+            <img id="mgChatAvatar" alt="">
+            <div>
+              <div class="mg-chat__name" id="mgChatName">—</div>
+              <div class="mg-chat__sub" id="mgChatSub"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mg-chat__body" id="mgChatBody"></div>
+
+        <form class="mg-chat__composer" id="mgChatForm">
+          {% csrf_token %}
+          <input id="mgChatInput" type="text" placeholder="Escribe un mensaje..." autocomplete="off">
+          <button id="mgSendBtn" type="submit">Enviar</button>
+        </form>
+      </div>
+    </section>
+  </div>
+</aside>
+<div class="mg-backdrop" id="mgBackdrop"></div>
+
+<!-- ===== PANEL AMIGOS ===== -->
+<aside class="mg-panel mg-panel--friends" id="friendsPanel" aria-hidden="true">
+  <header class="mg-panel__head">
+    <div class="mg-panel__title">Amigos</div>
+    <button class="mg-panel__close" id="btnCloseFriends" type="button">✕</button>
+  </header>
+
+  <div class="mg-left__tabs mg-left__tabs--friends">
+    <button type="button" class="mg-tab is-active" data-friendtab="friends">Amigos</button>
+    <button type="button" class="mg-tab" data-friendtab="requests">Peticiones</button>
+    <button type="button" class="mg-tab mg-tab--primary" id="btnOpenAddFriend">+ Añadir</button>
+  </div>
+
+  <div class="mg-friends" id="mgFriendsList">
+    <div class="mg-empty">Cargando...</div>
+  </div>
+
+  <div class="mg-requests" id="mgRequests" hidden>
+    <div class="mg-section-title">Solicitudes recibidas</div>
+    <div class="mg-list" id="mgIncoming"></div>
+
+    <div class="mg-section-title">Solicitudes enviadas</div>
+    <div class="mg-list" id="mgOutgoing"></div>
+  </div>
+</aside>
+
+<!-- ===== MODAL AÑADIR AMIGO ===== -->
+<div class="mg-modal" id="mgAddFriendModal" aria-hidden="true">
+  <div class="mg-modal__card" role="dialog" aria-modal="true">
+    <div class="mg-modal__head">
+      <h3>Añadir amigo</h3>
+      <button class="mg-modal__close" id="mgCloseAddFriend" type="button">✕</button>
+    </div>
+    <p class="mg-muted">Escribe el <b>username</b> o el <b>correo</b> del usuario.</p>
+
+    <form id="mgAddFriendForm" class="mg-modal__form">
+      <input id="mgAddFriendInput" type="text" placeholder="ej: usuario o correo@email.com" autocomplete="off">
+      <button type="submit">Enviar solicitud</button>
+    </form>
+    <div class="mg-modal__status" id="mgAddFriendStatus"></div>
+  </div>
+</div>
+
+<script src="{% static 'games/js/messenger_panels.js' %}"></script>
+</body>
+</html>

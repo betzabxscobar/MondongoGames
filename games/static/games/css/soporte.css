@@ -1,0 +1,269 @@
+body{
+    background: url("../img/fondo_soporte.png") no-repeat center center fixed;
+    background-size: cover;
+}
+.support-page{
+    min-height: calc(100vh - 80px);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding: 40px 16px;
+}
+
+.support-card{
+    width: min(720px, 100%);
+    background: rgba(0,0,0,0.55);
+    border: 1px solid #00ffff33;
+    border-radius: 18px;
+    padding: 22px;
+    box-shadow: 0 0 24px rgba(0,255,255,0.08);
+}
+
+.support-card h1{
+    margin: 0 0 8px;
+}
+
+.muted{
+    opacity: 0.85;
+    margin: 0 0 18px;
+}
+
+.support-options{
+    display:grid;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+.support-choice{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.choice-card{
+    position: relative;
+    display: block;
+    cursor: pointer;
+    border-radius: 16px;
+    border: 1px solid #00ffff22;
+    background: rgba(0,0,0,0.28);
+    transition: 0.18s ease;
+    overflow: hidden;
+}
+
+.choice-card:hover{
+    border-color: #ff00ff55;
+    box-shadow: 0 0 18px rgba(255,0,255,0.20);
+    transform: translateY(-1px);
+}
+
+.choice-card input{
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.choice-content{
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 14px 14px;
+}
+
+.choice-icon{
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    border: 1px solid #00ffff22;
+    background: rgba(0,255,255,0.06);
+    font-size: 20px;
+}
+
+.choice-title{
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.choice-sub{
+    margin-top: 4px;
+    font-size: 0.9rem;
+    opacity: 0.8;
+    line-height: 1.25;
+}
+
+/* estado seleccionado (cuando el radio está checked) */
+.choice-card:has(input:checked){
+    border-color: #00ffff;
+    box-shadow: 0 0 22px rgba(0,255,255,0.22);
+    background: rgba(0,255,255,0.06);
+}
+
+/* responsive */
+@media (max-width: 720px){
+    .support-choice{
+        grid-template-columns: 1fr;
+    }
+}
+
+.field label{
+    display:block;
+    margin-bottom: 8px;
+    opacity: 0.9;
+}
+
+.field textarea{
+    width: 100%;
+    border-radius: 14px;
+    border: 1px solid #00ffff22;
+    background: rgba(0,0,0,0.35);
+    color: white;
+    padding: 12px;
+    outline: none;
+    resize: vertical;
+}
+
+.actions{
+    display:flex;
+    gap: 12px;
+    align-items:center;
+    margin-top: 16px;
+    flex-wrap: wrap;
+}
+
+.btn-secondary{
+    display:inline-block;
+    padding: 10px 14px;
+    border-radius: 14px;
+    border: 1px solid #ffffff22;
+    text-decoration:none;
+    color: white;
+    opacity: 0.9;
+}
+
+.btn-secondary:hover{
+    opacity: 1;
+}
+
+.hint{
+    margin-top: 12px;
+    font-size: 0.9rem;
+    opacity: 0.75;
+}
+
+.support-choice{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.choice-card{
+    position:relative;
+    cursor:pointer;
+}
+
+.choice-card input{
+    position:absolute;
+    inset:0;
+    opacity:0;
+    pointer-events:none;
+}
+
+/* estilo tipo btn-glitch-fill */
+.glitch-card{
+    border-radius:18px;
+    border:1px solid #00ffff55;
+    padding:16px;
+    background:rgba(0,0,0,0.35);
+    transition:0.2s ease;
+    box-shadow:0 0 12px rgba(0,255,255,0.15);
+}
+
+.glitch-card:hover{
+    border-color:#ff00ff;
+    box-shadow:0 0 22px rgba(255,0,255,0.35);
+    transform:translateY(-2px);
+}
+
+/* texto */
+.glitch-content{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+
+.glitch-title{
+    font-weight:700;
+    letter-spacing:0.5px;
+    font-size:1rem;
+}
+
+.glitch-sub{
+    font-size:0.85rem;
+    opacity:0.85;
+}
+
+/* estado seleccionado */
+.glitch-card:has(input:checked){
+    border-color:#00ffff;
+    box-shadow:0 0 30px rgba(0,255,255,0.45);
+    background:rgba(0,255,255,0.08);
+}
+.hidden{
+    display:none;
+}
+
+select{
+    width:100%;
+    padding:12px;
+    border-radius:14px;
+    border:1px solid #00ffff33;
+    background:rgba(0,0,0,0.35);
+    color:white;
+    outline:none;
+}
+
+input[type="file"]{
+    margin-top:8px;
+    color:white;
+}
+
+.support-success{
+    margin-top:18px;
+    padding:14px;
+    border-radius:14px;
+    border:1px solid #00ffff;
+    background:rgba(0,255,255,0.08);
+    box-shadow:0 0 18px rgba(0,255,255,0.25);
+}
+
+.support-error{
+    border-color:#ff4d7a;
+    background:rgba(255, 77, 122, 0.1);
+    box-shadow:0 0 18px rgba(255, 77, 122, 0.25);
+}
+.file-upload{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-top:8px;
+    flex-wrap:wrap;
+}
+
+/* ocultamos el input real */
+.file-upload input[type="file"]{
+    display:none;
+}
+
+.file-btn{
+    padding:8px 16px;
+}
+
+.file-name{
+    font-size:0.85rem;
+    opacity:0.85;
+    letter-spacing:0.3px;
+}

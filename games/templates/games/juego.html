@@ -1,0 +1,236 @@
+﻿{% extends "games/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'games/css/juego.css' %}?v=20260226-2">
+{% endblock %}
+
+{% block content %}
+<div class="game-page">
+    <input type="hidden" id="juegoId" value="{{ juego_id|default:'' }}">
+    <div class="game-header">
+        <h1 class="game-title">{{ nombre }}</h1>
+    </div>
+
+    <div class="game-container">
+        <div class="game-screen">
+            {% if nombre|lower == "space invaders" %}
+            {# El juego se renderiza en canvas y se controla por JS modular. #}
+            <p>Usa el menu con flechas y Enter. Dentro del juego, escribe palabras para destruir enemigos.</p>
+            <canvas id="spaceInvadersCanvas" width="1020" height="640"></canvas>
+            <script type="module" src="{% static 'games/js/juego_nave/main.js' %}?v=20260226-3"></script>
+            {% elif nombre|lower == "wall blood" %}
+            {# Version web de Wall Blood dentro del canvas. #}
+            <p>WASD para moverte, click para disparar, P para pausa, ESC para volver al menu.</p>
+            <canvas id="wallBloodCanvas" width="1500" height="800"></canvas>
+            <script type="module" src="{% static 'games/js/wall_blood/main.js' %}?v=20260226-3"></script>
+            {% elif nombre|lower == "regular show: fist punch" %}
+            {# Juego HTML5 externo integrado via iframe. #}
+            <p>Usa teclado para moverte y atacar. El juego se carga dentro de esta ventana.</p>
+            <iframe
+                id="regularShowFistPunchFrame"
+                src="{% static 'games/external/regular_show_fist_punch/content/files.numuki.com/games/regular-show/fist-punch/index.html' %}"
+                title="Regular Show: Fist Punch"
+                style="width:100%;max-width:1200px;height:720px;border:0;display:block;margin:0 auto;background:#000;"
+                allowfullscreen>
+            </iframe>
+            {% elif nombre|lower == "sky streaker" %}
+            {# Juego HTML5 externo integrado via iframe. #}
+            <p>Usa teclado para controlar al personaje y evitar obstaculos.</p>
+            <iframe
+                id="skyStreakerFrame"
+                src="{% static 'games/external/sky_streaker/content/emea.iframed.cn.dmti.cloud/content/20/game/sky-streaker/za/skystreaker-150718-en/index.html' %}?desktop=1&v=20260303-3"
+                title="Sky Streaker"
+                style="width:640px;max-width:92vw;height:960px;max-height:82vh;border:0;display:block;margin:0 auto;background:#000;"
+                allowfullscreen>
+            </iframe>
+            {% elif nombre|lower == "escaping the prison" %}
+            {# Juego Flash integrado con Ruffle para navegadores modernos. #}
+            <p>Este titulo usa emulacion Flash (Ruffle) para ejecutarse en PC.</p>
+            <div id="escapingThePrisonHost"
+                 style="width:960px;max-width:96vw;height:640px;max-height:82vh;margin:0 auto;background:#000;overflow:hidden;">
+            </div>
+            <script>
+            (function () {
+                const host = document.getElementById("escapingThePrisonHost");
+                if (!host) return;
+                // SWF local para este titulo.
+                const swfUrl = "{% static 'games/external/escaping_the_prison/content/farm.stickpage.com/escapingtheprisongame.swf' %}";
+
+                const status = document.createElement("div");
+                status.textContent = "Cargando emulador...";
+                status.style.cssText = "display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#ddd;font:600 16px/1 Arial,sans-serif;";
+                host.appendChild(status);
+
+                function mountPlayer() {
+                    if (typeof window.RufflePlayer === "undefined") return false;
+                    const ruffle = window.RufflePlayer.newest();
+                    const player = ruffle.createPlayer();
+                    player.style.width = "100%";
+                    player.style.height = "100%";
+                    host.innerHTML = "";
+                    host.appendChild(player);
+                    player.load(swfUrl).catch(() => {
+                        host.innerHTML = "<div style='display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#f88;font:600 15px/1 Arial,sans-serif;'>No se pudo cargar el juego.</div>";
+                    });
+                    return true;
+                }
+
+                // Si Ruffle ya existe, montar de una vez.
+                if (mountPlayer()) return;
+
+                const existing = document.getElementById("ruffle-cdn");
+                if (existing) {
+                    existing.addEventListener("load", mountPlayer, { once: true });
+                    return;
+                }
+
+                const script = document.createElement("script");
+                script.id = "ruffle-cdn";
+                script.src = "https://unpkg.com/@ruffle-rs/ruffle";
+                script.async = true;
+                script.onload = mountPlayer;
+                script.onerror = () => {
+                    host.innerHTML = "<div style='display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#f88;font:600 15px/1 Arial,sans-serif;'>No se pudo cargar Ruffle.</div>";
+                };
+                document.head.appendChild(script);
+            })();
+            </script>
+            {% elif nombre|lower == "extreme pamplona" %}
+            {# Juego Flash integrado con Ruffle para navegadores modernos. #}
+            <p>Este titulo usa emulacion Flash (Ruffle) para ejecutarse en PC.</p>
+            <div id="extremePamplonaHost"
+                 style="width:960px;max-width:96vw;height:640px;max-height:82vh;margin:0 auto;background:#000;overflow:hidden;">
+            </div>
+            <script>
+            (function () {
+                const host = document.getElementById("extremePamplonaHost");
+                if (!host) return;
+                // Carga remota porque el paquete local no trae todos los assets secundarios.
+                const swfUrlRemote = "https://files.crazygames.com/extreme-pamplona/extreme-pamplona.swf";
+                const swfBaseRemote = "https://files.crazygames.com/extreme-pamplona/";
+                const swfUrlLocal = "{% static 'games/external/extreme_pamplona/content/files.crazygames.com/extreme-pamplona/extreme-pamplona.swf' %}";
+                const swfBaseLocal = "{% static 'games/external/extreme_pamplona/content/files.crazygames.com/extreme-pamplona/' %}";
+
+                const status = document.createElement("div");
+                status.textContent = "Cargando emulador...";
+                status.style.cssText = "display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#ddd;font:600 16px/1 Arial,sans-serif;";
+                host.appendChild(status);
+
+                function mountPlayer(url, base) {
+                    if (typeof window.RufflePlayer === "undefined") return false;
+                    const ruffle = window.RufflePlayer.newest();
+                    const player = ruffle.createPlayer();
+                    player.style.width = "100%";
+                    player.style.height = "100%";
+                    host.innerHTML = "";
+                    host.appendChild(player);
+                    player.load({
+                        url: url,
+                        base: base,
+                        allowScriptAccess: true,
+                        parameters: {},
+                    }).catch(() => {
+                        if (url === swfUrlRemote) {
+                            // Fallback local por si la red bloquea el host remoto.
+                            mountPlayer(swfUrlLocal, swfBaseLocal);
+                            return;
+                        }
+                        host.innerHTML = "<div style='display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#f88;font:600 15px/1 Arial,sans-serif;'>No se pudo cargar Extreme Pamplona. Faltan archivos del paquete local.</div>";
+                    });
+                    return true;
+                }
+
+                // Intenta primero remoto y usa local solo como respaldo.
+                if (mountPlayer(swfUrlRemote, swfBaseRemote)) return;
+
+                const existing = document.getElementById("ruffle-cdn");
+                if (existing) {
+                    existing.addEventListener("load", () => mountPlayer(swfUrlRemote, swfBaseRemote), { once: true });
+                    return;
+                }
+
+                const script = document.createElement("script");
+                script.id = "ruffle-cdn";
+                script.src = "https://unpkg.com/@ruffle-rs/ruffle";
+                script.async = true;
+                script.onload = () => mountPlayer(swfUrlRemote, swfBaseRemote);
+                script.onerror = () => {
+                    host.innerHTML = "<div style='display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#f88;font:600 15px/1 Arial,sans-serif;'>No se pudo cargar Ruffle.</div>";
+                };
+                document.head.appendChild(script);
+            })();
+            </script>
+            {% else %}
+            <h2>Aqui ira el juego</h2>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<script>
+function getCookie(name) {
+    const cookieValue = document.cookie
+        .split('; ')
+        .find(row => row.startsWith(name + '='));
+    return cookieValue ? decodeURIComponent(cookieValue.split('=')[1]) : null;
+}
+
+window.registrarPartida = async function (payload) {
+    const idJuego = Number(document.getElementById("juegoId")?.value || 0);
+    if (!idJuego) return;
+
+    const body = {
+        id_juego: idJuego,
+        score: Number(payload?.score || 0),
+        tiempo_juego: Number(payload?.tiempo_juego || 0),
+    };
+
+    try {
+        await fetch("{% url 'registrar_partida' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken") || "",
+            },
+            body: JSON.stringify(body),
+        });
+    } catch (error) {
+        console.error("No se pudo registrar la partida:", error);
+    }
+};
+
+// Para juegos externos que no exponen score, registrar al menos la apertura.
+(function () {
+    const externalAutoTrack = new Set([
+        "regular show: fist punch",
+        "sky streaker",
+        "escaping the prison",
+        "extreme pamplona",
+    ]);
+
+    const gameName = (document.querySelector(".game-title")?.textContent || "").trim().toLowerCase();
+    if (!externalAutoTrack.has(gameName)) return;
+
+    const openedAt = Date.now();
+    let reported = false;
+
+    function reportOpenIfNeeded() {
+        if (reported || typeof window.registrarPartida !== "function") return;
+        reported = true;
+
+        const elapsed = Math.max(1, Math.floor((Date.now() - openedAt) / 1000));
+        window.registrarPartida({
+            score: 0,
+            tiempo_juego: elapsed,
+        });
+    }
+
+    window.addEventListener("pagehide", reportOpenIfNeeded, { once: true });
+    window.addEventListener("beforeunload", reportOpenIfNeeded, { once: true });
+})();
+</script>
+{% endblock %}
+
+
+
+

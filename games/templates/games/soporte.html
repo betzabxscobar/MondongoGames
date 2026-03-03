@@ -1,0 +1,130 @@
+{% extends "games/base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'games/css/soporte.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="support-page">
+    <div class="support-card">
+        <h1>Bienvenido a Soporte</h1>
+        <p class="muted">Cuentanos que paso y te ayudamos.</p>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="support-success{% if message.tags != 'success' %} support-error{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" class="support-form" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="support-choice">
+                <label class="choice-card glitch-card">
+                    <input type="radio" name="tipo" value="juego" required>
+                    <div class="glitch-content">
+                        <span class="glitch-title">Problema en un juego</span>
+                        <span class="glitch-sub">Lag, pantalla negra, errores dentro del juego.</span>
+                    </div>
+                </label>
+
+                <label class="choice-card glitch-card">
+                    <input type="radio" name="tipo" value="plataforma" required>
+                    <div class="glitch-content">
+                        <span class="glitch-title">Problema en la plataforma</span>
+                        <span class="glitch-sub">Login, perfil, dashboard, navegacion, etc.</span>
+                    </div>
+                </label>
+            </div>
+
+                <div class="field hidden" id="gameSelectField">
+                <label for="gameSelect">En que juego ocurrio?</label>
+                <select id="gameSelect" name="game">
+                    <option value="">Selecciona un juego</option>
+                    <option value="Space Invaders">Space Invaders</option>
+                    <option value="Wall Blood">Wall Blood</option>
+                    <option value="Regular Show: Fist Punch">Regular Show: Fist Punch</option>
+                    <option value="Sky Streaker">Sky Streaker</option>
+                    <option value="Escaping the Prison">Escaping the Prison</option>
+                    <option value="Extreme Pamplona">Extreme Pamplona</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="motivo">Motivo / Descripcion</label>
+                <textarea id="motivo" name="motivo" rows="5" required
+                    placeholder="Describe el problema (que hiciste, que esperabas que pase y que paso)..."></textarea>
+            </div>
+
+            <div class="field">
+                <label for="screenshot">Adjuntar captura (opcional)</label>
+                <div class="file-upload">
+                    <input type="file" id="screenshot" name="screenshot" accept="image/*">
+                    <button type="button" class="btn-glitch-fill file-btn" id="fileTrigger">
+                        <span class="text">Seleccionar captura</span>
+                        <span class="text-decoration"> _</span>
+                        <span class="decoration">=&gt;</span>
+                    </button>
+                    <span class="file-name" id="fileName">Ningun archivo seleccionado</span>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="submit" class="btn-glitch-fill">
+                    <span class="text">Enviar</span>
+                    <span class="text-decoration"> _</span>
+                    <span class="decoration">=&gt;</span>
+                </button>
+                <a href="{% url 'dashboard' %}" class="btn-secondary">Volver</a>
+            </div>
+
+            <p class="hint">
+                * Tu reporte se guarda en Supabase.
+            </p>
+        </form>
+
+        <div id="supportSuccess" class="support-success{% if not support_saved %} hidden{% endif %}">
+            Tu reporte fue enviado correctamente.
+            Nuestro equipo lo revisara pronto.
+        </div>
+    </div>
+</div>
+<script>
+const radios = document.querySelectorAll('input[name="tipo"]');
+const gameField = document.getElementById("gameSelectField");
+
+function refreshGameField() {
+    const selected = document.querySelector('input[name="tipo"]:checked');
+    if (selected && selected.value === "juego") {
+        gameField.classList.remove("hidden");
+    } else {
+        gameField.classList.add("hidden");
+    }
+}
+
+radios.forEach((radio) => {
+    radio.addEventListener("change", refreshGameField);
+});
+refreshGameField();
+</script>
+<script>
+const fileInput = document.getElementById("screenshot");
+const fileTrigger = document.getElementById("fileTrigger");
+const fileName = document.getElementById("fileName");
+
+fileTrigger.addEventListener("click", () => {
+    fileInput.click();
+});
+
+fileInput.addEventListener("change", () => {
+    if (fileInput.files.length > 0) {
+        fileName.textContent = fileInput.files[0].name;
+    } else {
+        fileName.textContent = "Ningun archivo seleccionado";
+    }
+});
+</script>
+{% endblock %}

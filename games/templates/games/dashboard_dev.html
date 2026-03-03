@@ -1,0 +1,176 @@
+{% extends "games/base.html" %}
+{% load static %}
+{% block body_class %}dev-body{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'games/css/dev_dashboard.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="dev-shell">
+    <header class="dev-header">
+        <div class="dev-title">
+        <div class="kicker">CONSOLA DEL DESARROLLLADOR</div>
+        <h1>DASHBOARD DESARROLLADOR</h1>
+        <div class="sub">Monitoreo • Soporte • Testing (solo lectura)</div>
+        </div>
+
+        <div class="dev-actions">
+        <a class="neo-btn" href="{% url 'soporte_dev' %}">Panel Soporte</a>
+        <a class="neo-btn" href="{% url 'dashboard_user' %}">Ver como Jugador</a>
+        <a class="neo-btn danger" href="{% url 'logout' %}">Salir</a>
+        </div>
+    </header>
+
+    <!-- TARJETAS (métricas) -->
+    <section class="grid-4">
+        <div class="neo-card">
+        <div class="label">PARTIDAS HOY</div>
+        <div class="value">{{ partidas_hoy_count }}</div>
+        <div class="hint">{{ hoy }}</div>
+        </div>
+
+        <div class="neo-card">
+        <div class="label">USUARIOS ACTIVOS</div>
+        <div class="value">{{ usuarios_activos_hoy }}</div>
+        <div class="hint">jugaron hoy</div>
+        </div>
+
+        <div class="neo-card">
+        <div class="label">AVG SCORE HOY</div>
+        <div class="value">{{ score_promedio_hoy }}</div>
+        <div class="hint">promedio diario</div>
+        </div>
+
+        <div class="neo-card">
+        <div class="label">AVG SCORE GLOBAL</div>
+        <div class="value">{{ score_promedio_global }}</div>
+        <div class="hint">promedio total</div>
+        </div>
+    </section>
+
+    <section class="grid-2">
+        <!-- LIVE FEED -->
+        <div class="neo-panel">
+        <div class="panel-head">
+            <h2>FEED EN VIVO • Actividad reciente</h2>
+            <span class="chip">LIVE</span>
+        </div>
+
+        <div class="table-wrap">
+            <table class="neo-table">
+            <thead>
+                <tr>
+                <th>ID</th>
+                <th>Usuario</th>
+                <th>Juego</th>
+                <th>Score</th>
+                <th>Tiempo</th>
+                <th>Fecha</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in actividad %}
+                <tr>
+                <td>#{{ p.id_partida }}</td>
+                <td>{{ p.id_usuario.nombre }}</td>
+                <td>{{ p.id_juego.titulo }}</td>
+                <td class="score">{{ p.score }}</td>
+                <td>{{ p.tiempo_juego }}s</td>
+                <td>{{ p.fecha_partida }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="empty">No hay partidas todavía.</td></tr>
+                {% endfor %}
+            </tbody>
+            </table>
+        </div>
+        </div>
+
+        <!-- PANEL TERMINAL + TESTING -->
+        <div class="neo-panel terminal">
+        <div class="panel-head">
+            <h2>ESTADO DEL SISTEMA</h2>
+            <span class="chip green">OK</span>
+        </div>
+
+        <div class="console">
+            <div class="line"><span class="p">&gt;</span> server_time: <span class="v">{{ system_info.server_time }}</span></div>
+            <div class="line"><span class="p">&gt;</span> DEBUG: <span class="v">{{ system_info.debug }}</span></div>
+            <div class="line"><span class="p">&gt;</span> db_vendor: <span class="v">{{ system_info.db_vendor }}</span></div>
+            <div class="line"><span class="p">&gt;</span> TOP JUEGO DE HOY: <span class="v">{{ juego_top_hoy }}</span> (<span class="v">{{ juego_top_hoy_count }}</span>)</div>
+            <div class="line"><span class="p">&gt;</span> TOP JUEGO GLOBAL: <span class="v">{{ juego_top_global }}</span> (<span class="v">{{ juego_top_global_count }}</span>)</div>
+
+            <div class="sep"></div>
+
+            <div class="line"><span class="p">&gt;</span> MODO DE TESTEO: <span class="v">SOLO LECTURA</span></div>
+            <div class="line"><span class="p">&gt;</span> hint: usa Soporte para reportes y el feed para validar registros</div>
+        </div>
+
+        <div class="quick-actions">
+            <button class="neo-btn" type="button" id="copyTestJson">Copiar JSON de prueba</button>
+            <button class="neo-btn" type="button" id="toggleHints">Toggle hints</button>
+        </div>
+
+        <pre class="test-json" id="testJson" hidden>{
+    "id_juego": 1,
+    "score": 999,
+    "tiempo_juego": 120
+    }</pre>
+        </div>
+    </section>
+
+    <!-- Soporte / herramientas -->
+    <section class="neo-panel mega">
+        <div class="panel-head">
+        <h2>Soporte & herramientas</h2>
+        <span class="chip green">DESARROLLADOR</span>
+        </div>
+
+        <div class="tools-grid">
+        <a class="tool-card" href="{% url 'soporte' %}">
+            <div class="t-title">Soporte</div>
+            <div class="t-sub">Revisar tickets / mensajes</div>
+        </a>
+
+        <a class="tool-card" href="/admin/">
+            <div class="t-title">Django Admin</div>
+            <div class="t-sub">Solo si tienes permisos</div>
+        </a>
+
+        <a class="tool-card" href="{% url 'dashboard_user' %}">
+            <div class="t-title">UI Jugador</div>
+            <div class="t-sub">Reproducir bugs visuales</div>
+        </a>
+
+        <a class="tool-card" href="{% url 'dashboard' %}">
+            <div class="t-title">Router</div>
+            <div class="t-sub">Ver redirección por rol</div>
+        </a>
+        </div>
+    </section>
+
+    </div>
+
+    <script>
+    // Dev tools: no modifica nada, solo ayuda a copiar payload
+    const btnCopy = document.getElementById("copyTestJson");
+    const btnHints = document.getElementById("toggleHints");
+    const pre = document.getElementById("testJson");
+
+    btnCopy?.addEventListener("click", async () => {
+        try {
+        const txt = pre.textContent.trim();
+        await navigator.clipboard.writeText(txt);
+        btnCopy.textContent = "✅ Copiado";
+        setTimeout(() => btnCopy.textContent = "Copiar JSON de prueba", 900);
+        } catch {
+        btnCopy.textContent = "❌ No se pudo copiar";
+        setTimeout(() => btnCopy.textContent = "Copiar JSON de prueba", 900);
+        }
+    });
+
+    btnHints?.addEventListener("click", () => {
+        pre.hidden = !pre.hidden;
+    });
+</script>
+{% endblock %}
