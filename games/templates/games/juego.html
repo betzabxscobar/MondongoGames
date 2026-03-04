@@ -34,6 +34,17 @@
                 style="width:100%;max-width:1200px;height:720px;border:0;display:block;margin:0 auto;background:#000;"
                 allowfullscreen>
             </iframe>
+            {% elif nombre|lower == "regular show: battle of the behemoths" %}
+            {# Juego HTML5 externo integrado via iframe (contenido local extraido de ZIP). #}
+            <p>Enfrenta jefes gigantes usando teclado. Carga local del paquete HTML5.</p>
+            <iframe
+                id="regularShowBehemothsFrame"
+                src="{% static 'games/external/regular_show_battle_of_the_behemoths/content/emea.iframed.cn.dmti.cloud/content/1155/game/battle-of-the-behemoths/ae/battleofbehemoths-160818/index.html' %}"
+                title="Regular Show: Battle of the Behemoths"
+                style="width:100%;max-width:1200px;height:720px;border:0;display:block;margin:0 auto;background:#000;overflow:hidden;"
+                scrolling="no"
+                allowfullscreen>
+            </iframe>
             {% elif nombre|lower == "sky streaker" %}
             {# Juego HTML5 externo integrado via iframe. #}
             <p>Usa teclado para controlar al personaje y evitar obstaculos.</p>
@@ -161,6 +172,27 @@
                 document.head.appendChild(script);
             })();
             </script>
+            {% elif nombre|lower == "agent p: rebel spy" %}
+            {# Juego HTML5 externo integrado via iframe con index_local para evitar bloqueos de dominio. #}
+            <p>Usa teclado para moverte y atacar dentro de la base enemiga.</p>
+            <iframe
+                id="agentPRebelSpyFrame"
+                src="{% static 'games/external/agent_p_rebel_spy/content/play.disney.com/html5/phf_spl_plt_agentprebelspy/index_local.html' %}"
+                title="Agent P: Rebel Spy"
+                style="width:100%;max-width:1200px;height:720px;border:0;display:block;margin:0 auto;background:#000;overflow:hidden;"
+                scrolling="no"
+                allowfullscreen>
+            </iframe>
+            <script>
+            (function () {
+                const frame = document.getElementById("agentPRebelSpyFrame");
+                if (!frame) return;
+                // Fallback visual si el iframe no llega a cargar.
+                frame.addEventListener("error", function () {
+                    frame.outerHTML = "<div style='display:flex;align-items:center;justify-content:center;width:100%;max-width:1200px;height:720px;margin:0 auto;color:#f88;background:#000;font:600 15px/1 Arial,sans-serif;'>No se pudo cargar Agent P: Rebel Spy.</div>";
+                });
+            })();
+            </script>
             {% else %}
             <h2>Aqui ira el juego</h2>
             {% endif %}
@@ -199,13 +231,15 @@ window.registrarPartida = async function (payload) {
     }
 };
 
-// Para juegos externos que no exponen score, registrar al menos la apertura.
-(function () {
+    // Para juegos externos que no exponen score, registrar al menos la apertura.
+    (function () {
     const externalAutoTrack = new Set([
         "regular show: fist punch",
+        "regular show: battle of the behemoths",
         "sky streaker",
         "escaping the prison",
         "extreme pamplona",
+        "agent p: rebel spy",
     ]);
 
     const gameName = (document.querySelector(".game-title")?.textContent || "").trim().toLowerCase();

@@ -13,8 +13,8 @@
                 <h2 class="brandTitle">Mondonguito</h2>
 
                 <div class="avatar">
-                    {% if request.user.profile.avatar %}
-                        <img src="{{ request.user.profile.avatar.url }}" class="avatar-img">
+                    {% if current_user_avatar_url %}
+                        <img src="{{ current_user_avatar_url }}" class="avatar-img">
                     {% else %}
                         <span class="avatar-letter">
                             {{ request.user.username|first|upper }}
@@ -123,13 +123,13 @@
 </div>
 
 <audio id="bgMusic" loop>
-    <source src="{% static 'games/sounds/bg-music.mp3' %}" type="audio/mpeg">
+    <source src="{{ ui_audio.bg_music }}" type="audio/mpeg">
 </audio>
 <audio id="clickSfx" preload="auto">
-    <source src="{% static 'games/sounds/dashboard_sonido.mp3' %}" type="audio/mpeg">
+    <source src="{{ ui_audio.dashboard_sonido }}" type="audio/mpeg">
 </audio>
 <audio id="uiHoverSfx" preload="auto">
-    <source src="{% static 'games/sounds/dashboard_sonido.mp3' %}" type="audio/mpeg">
+    <source src="{{ ui_audio.dashboard_sonido }}" type="audio/mpeg">
 </audio>
 <script>
 const canvas = document.getElementById("bgCanvas");

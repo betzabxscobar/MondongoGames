@@ -4,6 +4,16 @@
 <div class="profile-glass">
     <h2 class="form-group">Editar Perfil</h2>
 
+    {% if messages %}
+        {% for message in messages %}
+            {% if 'profile' in message.tags %}
+                <div class="form-group">
+                    {{ message }}
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
     <form method="post" enctype="multipart/form-data" class="edit-form">
         {% csrf_token %}
 

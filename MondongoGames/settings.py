@@ -81,6 +81,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'games.context_processors.current_user_avatar',
+                'games.context_processors.ui_audio_urls',
             ],
         },
     },
@@ -164,6 +166,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 
+# Legacy local media (fallback). Avatares y capturas nuevas usan Supabase Storage.
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
