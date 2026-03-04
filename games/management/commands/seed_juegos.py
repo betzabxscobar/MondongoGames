@@ -30,6 +30,12 @@ class Command(BaseCommand):
                 "fecha_lanzamiento": date(2026, 3, 2),
             },
             {
+                "titulo": "Regular Show: Battle of the Behemoths",
+                "genero": "Arcade",
+                "desarrollador": "Cartoon Network",
+                "fecha_lanzamiento": date(2026, 3, 4),
+            },
+            {
                 "titulo": "Sky Streaker",
                 "genero": "Arcade",
                 "desarrollador": "Cartoon Network",
@@ -46,6 +52,12 @@ class Command(BaseCommand):
                 "genero": "Arcade",
                 "desarrollador": "CrazyGames",
                 "fecha_lanzamiento": date(2026, 3, 3),
+            },
+            {
+                "titulo": "Agent P: Rebel Spy",
+                "genero": "Arcade",
+                "desarrollador": "Disney",
+                "fecha_lanzamiento": date(2026, 3, 4),
             },
         ]
 

@@ -65,8 +65,8 @@
             <input type="checkbox" id="profileMenuToggle" />
     
             <div tabindex="0" class="burger avatar">
-                {% if request.user.profile.avatar %}
-                    <img src="{{ request.user.profile.avatar.url }}" class="avatar-img">
+                {% if current_user_avatar_url %}
+                    <img src="{{ current_user_avatar_url }}" class="avatar-img">
                 {% else %}
                     {{ request.user.username|first|upper }}
                 {% endif %}
@@ -105,15 +105,15 @@
 
 
 <audio id="clickEditarPerfil">
-    <source src="{% static 'games/sounds/click_editar_perfil.mp3' %}" type="audio/mpeg">
+    <source src="{{ ui_audio.click_editar_perfil }}" type="audio/mpeg">
 </audio>
 
 <audio id="clickCerrarSesion">
-    <source src="{% static 'games/sounds/click_cerrar_sesion.mp3' %}" type="audio/mpeg">
+    <source src="{{ ui_audio.click_cerrar_sesion }}" type="audio/mpeg">
 </audio>
 
 <audio id="hoverCardSound" preload="auto">
-    <source src="{% static 'games/sounds/hover_card.mp3' %}" type="audio/mpeg">
+    <source src="{{ ui_audio.hover_card }}" type="audio/mpeg">
 </audio>
 <script>
     /* ===== CERRAR DROPDOWN PERFIL AL CLIC AFUERA ===== */
@@ -181,6 +181,7 @@ document.querySelectorAll(".card").forEach(card => {
     });
 });
 </script>
+{% if not disable_realtime_ui %}
 <!-- ===== PANEL MENSAJES (tipo Messenger) ===== -->
 <aside class="mg-panel" id="messagesPanel" aria-hidden="true">
   <header class="mg-panel__head">
@@ -278,5 +279,6 @@ document.querySelectorAll(".card").forEach(card => {
 </div>
 
 <script src="{% static 'games/js/messenger_panels.js' %}"></script>
+{% endif %}
 </body>
 </html>

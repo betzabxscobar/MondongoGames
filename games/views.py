@@ -1,4 +1,5 @@
 ﻿import json
+import mimetypes
 import os
 import re
 import unicodedata
@@ -23,11 +24,20 @@ from django.conf import settings
 from django.db import connection
 from django.db.models import Avg, Count
 from supabase_cliente import (
+    get_public_storage_url,
     insert_support_ticket,
     list_support_tickets,
+    upload_profile_avatar,
+    upload_support_screenshot,
     update_support_ticket_status,
 )
 User = get_user_model()
+
+
+def _support_games_options() -> list[str]:
+    # Opciones de juegos para Soporte.
+    # Se leen desde BD para no editar el HTML cada vez que se agrega un juego.
+    return list(Juego.objects.order_by("titulo").values_list("titulo", flat=True))
 
 
 def _insert_support_ticket_via_db(payload: dict) -> None:
@@ -171,22 +181,27 @@ def dashboard_user(request):
         return "".join(ch for ch in txt if unicodedata.category(ch) != "Mn")
 
     # Mapa rapido para cards del dashboard (imagen por titulo).
+    # Aqui tambien se mapean los juegos externos agregados por ZIP.
     imagenes_por_titulo = {
         "space invaders": "games/img/game1.png",
         "wall blood": "games/img/game2.png",
         "regular show: fist punch": "games/img/game3.png",
+        "regular show: battle of the behemoths": "games/img/game3.png",
         "sky streaker": "games/img/game1.png",
         "escaping the prison": "games/img/game2.png",
         "extreme pamplona": "games/img/game3.png",
+        "agent p: rebel spy": "games/img/game3.png",
     }
     # Categoria forzada para titulos externos o legacy.
     categoria_por_titulo = {
         "space invaders": "Aventura",
         "wall blood": "Accion",
         "regular show: fist punch": "Arcade",
+        "regular show: battle of the behemoths": "Arcade",
         "sky streaker": "Arcade",
         "escaping the prison": "Arcade",
         "extreme pamplona": "Arcade",
+        "agent p: rebel spy": "Arcade",
     }
 
     juegos = []
@@ -201,7 +216,14 @@ def dashboard_user(request):
         )
 
     # Fallback: mostrar juegos externos aunque aun no exista el registro en BD.
-    fallback_titles = ["Regular Show: Fist Punch", "Sky Streaker", "Escaping the Prison", "Extreme Pamplona"]
+    fallback_titles = [
+        "Regular Show: Fist Punch",
+        "Regular Show: Battle of the Behemoths",
+        "Sky Streaker",
+        "Escaping the Prison",
+        "Extreme Pamplona",
+        "Agent P: Rebel Spy",
+    ]
     for title in fallback_titles:
         if any(j["nombre"].lower() == title.lower() for j in juegos):
             continue
@@ -248,7 +270,12 @@ def juego(request, nombre):
     return render(
         request,
         "games/juego.html",
-        {"nombre": nombre, "juego_id": juego_db.id_juego if juego_db else None},
+        {
+            "nombre": nombre,
+            "juego_id": juego_db.id_juego if juego_db else None,
+            # En vista de juego se desactiva UI en tiempo real para liberar CPU.
+            "disable_realtime_ui": True,
+        },
     )
 
 @login_required
@@ -275,7 +302,56 @@ def edit_profile(request):
 
         if user_form.is_valid() and profile_form.is_valid():
             user_form.save()
-            profile_form.save()
+            avatar = request.FILES.get("avatar")
+            if avatar:
+                # Validaciones basicas del avatar antes de subirlo a Storage.
+                max_size = 3 * 1024 * 1024
+                if avatar.size > max_size:
+                    messages.error(request, "El avatar excede el limite de 3MB.", extra_tags="profile")
+                    return render(request, "games/edit_profile.html", {
+                        "user_form": user_form,
+                        "profile_form": profile_form
+                    }, status=400)
+
+                allowed_types = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+                detected_type = (avatar.content_type or "").lower().strip()
+                if detected_type not in allowed_types:
+                    guessed, _ = mimetypes.guess_type(avatar.name or "")
+                    detected_type = (guessed or "").lower()
+                    if detected_type not in allowed_types:
+                        messages.error(
+                            request,
+                            "Formato de avatar no valido. Usa JPG, PNG, WEBP o GIF.",
+                            extra_tags="profile",
+                        )
+                        return render(request, "games/edit_profile.html", {
+                            "user_form": user_form,
+                            "profile_form": profile_form
+                        }, status=400)
+
+                try:
+                    avatar_bytes = avatar.read()
+                    avatar_path, _ = upload_profile_avatar(
+                        user_id=request.user.id,
+                        original_name=avatar.name or "avatar.bin",
+                        content=avatar_bytes,
+                        content_type=detected_type,
+                    )
+                    # En DB guardamos path (profiles/...) en lugar de URL completa.
+                    profile.avatar = avatar_path
+                    profile.save(update_fields=["avatar"])
+                except Exception as exc:
+                    messages.error(
+                        request,
+                        f"No se pudo subir el avatar a Supabase Storage: {exc}",
+                        extra_tags="profile",
+                    )
+                    return render(request, "games/edit_profile.html", {
+                        "user_form": user_form,
+                        "profile_form": profile_form
+                    }, status=502)
+            else:
+                profile_form.save()
             return redirect("dashboard")
     else:
         user_form = EditProfileForm(instance=request.user)
@@ -289,25 +365,60 @@ def edit_profile(request):
 @login_required
 def soporte(request):
     # Flag para mostrar mensaje visual de envio exitoso en la plantilla.
-    context = {"support_saved": False}
+    # support_games alimenta el select dinamico de juegos en soporte.html.
+    context = {"support_saved": False, "support_games": _support_games_options()}
 
     if request.method == "POST":
+        # Mensajes de este modulo van con tag "support" para no mezclarlos.
         tipo = (request.POST.get("tipo") or "").strip().lower()
         motivo = (request.POST.get("motivo") or "").strip()
         juego = (request.POST.get("game") or "").strip()
         screenshot = request.FILES.get("screenshot")
 
         if tipo not in {"juego", "plataforma"}:
-            messages.error(request, "Selecciona un tipo de problema valido.")
+            messages.error(request, "Selecciona un tipo de problema valido.", extra_tags="support")
             return render(request, "games/soporte.html", context, status=400)
 
         if len(motivo) < 10:
-            messages.error(request, "Describe el problema con al menos 10 caracteres.")
+            messages.error(request, "Describe el problema con al menos 10 caracteres.", extra_tags="support")
             return render(request, "games/soporte.html", context, status=400)
 
         if tipo == "juego" and not juego:
-            messages.error(request, "Debes indicar en que juego ocurrio el problema.")
+            messages.error(request, "Debes indicar en que juego ocurrio el problema.", extra_tags="support")
             return render(request, "games/soporte.html", context, status=400)
+
+        screenshot_url = None
+        if screenshot:
+            # La captura tambien se valida y sube a Supabase Storage.
+            max_size = 5 * 1024 * 1024
+            if screenshot.size > max_size:
+                messages.error(request, "La captura excede el limite de 5MB.", extra_tags="support")
+                return render(request, "games/soporte.html", context, status=400)
+
+            allowed_types = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+            detected_type = (screenshot.content_type or "").lower().strip()
+            if detected_type not in allowed_types:
+                guessed, _ = mimetypes.guess_type(screenshot.name or "")
+                detected_type = (guessed or "").lower()
+                if detected_type not in allowed_types:
+                    messages.error(
+                        request,
+                        "Formato de captura no valido. Usa JPG, PNG, WEBP o GIF.",
+                        extra_tags="support",
+                    )
+                    return render(request, "games/soporte.html", context, status=400)
+
+            try:
+                screenshot_bytes = screenshot.read()
+                _, screenshot_url = upload_support_screenshot(
+                    user_id=request.user.id,
+                    original_name=screenshot.name or "screenshot.bin",
+                    content=screenshot_bytes,
+                    content_type=detected_type,
+                )
+            except Exception:
+                messages.error(request, "No se pudo subir la captura a Supabase Storage.", extra_tags="support")
+                return render(request, "games/soporte.html", context, status=502)
 
         payload = {
             "user_id": request.user.id,
@@ -316,7 +427,7 @@ def soporte(request):
             "tipo": tipo,
             "game": juego if tipo == "juego" else None,
             "motivo": motivo,
-            "screenshot_name": screenshot.name if screenshot else None,
+            "screenshot_name": screenshot_url,
             "estado": "pendiente",
             "created_at": timezone.now().isoformat(),
         }
@@ -329,19 +440,20 @@ def soporte(request):
             if "row-level security policy" in err_text:
                 try:
                     _insert_support_ticket_via_db(payload)
-                    messages.success(request, "Tu reporte fue enviado correctamente.")
+                    messages.success(request, "Tu reporte fue enviado correctamente.", extra_tags="support")
                     context["support_saved"] = True
                     return render(request, "games/soporte.html", context)
                 except Exception:
                     messages.error(
                         request,
                         "No se pudo enviar el reporte: la clave de Supabase no tiene permisos de escritura (RLS).",
+                        extra_tags="support",
                     )
             else:
-                messages.error(request, "No se pudo enviar el reporte a soporte.")
+                messages.error(request, "No se pudo enviar el reporte a soporte.", extra_tags="support")
             return render(request, "games/soporte.html", context, status=502)
 
-        messages.success(request, "Tu reporte fue enviado correctamente.")
+        messages.success(request, "Tu reporte fue enviado correctamente.", extra_tags="support")
         context["support_saved"] = True
 
     return render(request, "games/soporte.html", context)
@@ -802,8 +914,17 @@ def api_message_send(request, user_id: int):
 
 #Helpers
 def _avatar_url(user):
+    # Convierte el valor guardado en avatar a una URL util para frontend.
     try:
         if hasattr(user, "profile") and user.profile.avatar:
+            name = user.profile.avatar.name or ""
+            if name.startswith("http://") or name.startswith("https://"):
+                return name
+            bucket = os.getenv("SUPABASE_STORAGE_BUCKET_AVATARS", "avatars")
+            if name.startswith("profiles/"):
+                # Nuevo formato: path interno en bucket de Supabase.
+                return get_public_storage_url(bucket_name=bucket, object_path=name)
+            # Formato legacy: archivo local en media/.
             return user.profile.avatar.url
     except Exception:
         pass

@@ -13,9 +13,11 @@
 
         {% if messages %}
             {% for message in messages %}
-                <div class="support-success{% if message.tags != 'success' %} support-error{% endif %}">
-                    {{ message }}
-                </div>
+                {% if 'support' in message.tags %}
+                    <div class="support-success{% if 'success' not in message.tags %} support-error{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endif %}
             {% endfor %}
         {% endif %}
 
@@ -44,12 +46,10 @@
                 <label for="gameSelect">En que juego ocurrio?</label>
                 <select id="gameSelect" name="game">
                     <option value="">Selecciona un juego</option>
-                    <option value="Space Invaders">Space Invaders</option>
-                    <option value="Wall Blood">Wall Blood</option>
-                    <option value="Regular Show: Fist Punch">Regular Show: Fist Punch</option>
-                    <option value="Sky Streaker">Sky Streaker</option>
-                    <option value="Escaping the Prison">Escaping the Prison</option>
-                    <option value="Extreme Pamplona">Extreme Pamplona</option>
+                    {# Lista dinamica desde BD (contexto: support_games). #}
+                    {% for game_title in support_games %}
+                        <option value="{{ game_title }}">{{ game_title }}</option>
+                    {% endfor %}
                 </select>
             </div>
 
